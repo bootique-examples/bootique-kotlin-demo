@@ -1,0 +1,3 @@
+rootProject.name = "bootique-kotlin-demo"
+rootProject.buildFileName = "build.gradle.kts"
+
