@@ -5,6 +5,7 @@ import com.google.inject.Provider
 import com.google.inject.Provides
 import com.google.inject.Singleton
 import io.bootique.config.ConfigurationFactory
+import io.bootique.kotlin.config.modules.KotlinConfigModuleProvider
 import io.bootique.kotlin.core.KotlinBQModuleProvider
 import io.bootique.kotlin.core.KotlinBootique
 import io.bootique.kotlin.extra.config
@@ -17,12 +18,15 @@ import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
 import io.undertow.server.RoutingHandler
 import io.undertow.util.Headers
+import kotlinx.coroutines.experimental.delay
+import java.lang.System.currentTimeMillis
 
 /**
  * Entry point of application.
  */
 fun main(args: Array<String>) {
     KotlinBootique(args)
+        .args("--server", "--config=classpath:config.kts")
         .module(ApplicationModuleProvider())
         .exec()
         .exit()
@@ -34,7 +38,10 @@ fun main(args: Array<String>) {
 class ApplicationModuleProvider : KotlinBQModuleProvider {
     override val module = ApplicationModule()
     override val overrides = listOf(UndertowModule::class)
-    override val dependencies = listOf(UndertowModuleProvider())
+    override val dependencies = listOf(
+        UndertowModuleProvider(),
+        KotlinConfigModuleProvider()
+    )
 }
 
 /**
@@ -78,15 +85,17 @@ class RootHandlerProvider @Inject constructor(
 ) : Provider<HttpHandler> {
     override fun get(): HttpHandler {
         return RoutingHandler()
-            .get("/", messageHandler::get)
+            .get("/", CoroutinesHandler { messageHandler.get(it) })
     }
 }
 
 class MessageHandler @Inject constructor(
     private val applicationService: ApplicationService
 ) {
-    fun get(exchange: HttpServerExchange) {
-        exchange.responseHeaders.put(Headers.CONTENT_TYPE, "text/plain")
-        exchange.responseSender.send(applicationService.message())
+    suspend fun get(exchange: HttpServerExchange) {
+        val start = currentTimeMillis()
+        delay(1000L)
+        exchange.responseHeaders.put(Headers.CONTENT_TYPE, "text/html")
+        exchange.responseSender.send("""${applicationService.message()} <br/> Total time: ${currentTimeMillis() - start}ms""")
     }
 }
