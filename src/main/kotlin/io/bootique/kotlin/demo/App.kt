@@ -1,6 +1,7 @@
 package io.bootique.kotlin.demo
 
 import com.google.inject.Inject
+import com.google.inject.Provider
 import com.google.inject.Provides
 import com.google.inject.Singleton
 import io.bootique.config.ConfigurationFactory
@@ -9,9 +10,10 @@ import io.bootique.kotlin.core.KotlinBootique
 import io.bootique.kotlin.extra.config
 import io.bootique.kotlin.guice.KotlinBinder
 import io.bootique.kotlin.guice.KotlinModule
-import io.bootique.undertow.UndertowModuleExtender
+import io.bootique.undertow.UndertowModule
 import io.bootique.undertow.UndertowModuleProvider
-import io.bootique.undertow.handlers.Controller
+import io.bootique.undertow.handlers.RootHandler
+import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
 import io.undertow.server.RoutingHandler
 import io.undertow.util.Headers
@@ -31,6 +33,7 @@ fun main(args: Array<String>) {
  */
 class ApplicationModuleProvider : KotlinBQModuleProvider {
     override val module = ApplicationModule()
+    override val overrides = listOf(UndertowModule::class)
     override val dependencies = listOf(UndertowModuleProvider())
 }
 
@@ -40,9 +43,7 @@ class ApplicationModuleProvider : KotlinBQModuleProvider {
 class ApplicationModule : KotlinModule {
     override fun configure(binder: KotlinBinder) {
         binder.bind(ApplicationService::class).to(DefaultApplicationService::class).asSingleton()
-
-        UndertowModuleExtender(binder)
-            .addController(MessageController::class.java)
+        binder.bind(HttpHandler::class).annotatedWith(RootHandler::class).toProvider(RootHandlerProvider::class).asSingleton()
     }
 
     @Provides
@@ -72,13 +73,18 @@ class DefaultApplicationService @Inject constructor(
     override fun message() = configuration.message
 }
 
-class MessageController @Inject constructor(
-    private val applicationService: ApplicationService
-): Controller {
-    override fun defineRoutes(routingHandler: RoutingHandler) {
-        routingHandler.get("/", this::get)
+class RootHandlerProvider @Inject constructor(
+    val messageHandler: MessageHandler
+) : Provider<HttpHandler> {
+    override fun get(): HttpHandler {
+        return RoutingHandler()
+            .get("/", messageHandler::get)
     }
+}
 
+class MessageHandler @Inject constructor(
+    private val applicationService: ApplicationService
+) {
     fun get(exchange: HttpServerExchange) {
         exchange.responseHeaders.put(Headers.CONTENT_TYPE, "text/plain")
         exchange.responseSender.send(applicationService.message())
