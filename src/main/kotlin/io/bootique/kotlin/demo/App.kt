@@ -18,7 +18,7 @@ import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
 import io.undertow.server.RoutingHandler
 import io.undertow.util.Headers
-import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.delay
 import java.lang.System.currentTimeMillis
 
 /**
