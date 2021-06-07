@@ -6,6 +6,10 @@ A simple example that explains how to write [Bootique](https://bootique.io) appl
 *For additional help/questions about this example send a message to
 [Bootique forum](https://groups.google.com/forum/#!forum/bootique-user).*
 
+You can find different versions of framework in use at
+* [1.x](https://github.com/bootique-examples/bootique-kotlin-demo/tree/2.x)
+* [2.x](https://github.com/bootique-examples/bootique-kotlin-demo/tree/2.x)
+
 ## Prerequisites
 
 * Java 1.8 or newer.
