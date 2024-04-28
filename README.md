@@ -51,7 +51,7 @@ OPTIONS
 And run it:
 
 ```bash
-$ ./build/install/bootique-kotlin-demo/bin/bootique-kotlin-demo --server --config=classpath:config.kts
+$ ./build/install/bootique-kotlin-demo/bin/bootique-kotlin-demo --server --config=classpath:config.bq.kts
 ```
 
 Then open `http://localhost:9988` in browser.
